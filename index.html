@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>NUBBY'S BRICK FACTORY — much break, very number, wow</title>
+<link rel="preconnect" href="https://i.imgflip.com" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ===== floating meme background decorations (injected by JS) ===== -->
+<div id="memeRain" aria-hidden="true"></div>
+
+<!-- ===== main app shell ===== -->
+<div id="shell">
+
+  <!-- ===== TOP INVENTORY / STATUS BAR (Nubby style) ===== -->
+  <header id="topbar">
+    <div class="brand">
+      <span class="logo">NUBBY'S&nbsp;BRICK&nbsp;FACTORY</span>
+      <span class="sub">break bricks · make number · please Nubby</span>
+    </div>
+
+    <div id="stats">
+      <div class="stat" id="stat-round"><label>ROUND</label><b>1</b></div>
+      <div class="stat quota" id="stat-quota"><label>QUOTA</label><b>0</b></div>
+      <div class="stat score" id="stat-score"><label>NUMBER</label><b>0</b></div>
+      <div class="stat" id="stat-balls"><label>NUBBYS</label><b>0</b></div>
+      <div class="stat coins" id="stat-coins"><label>NUBBINS</label><b>0</b></div>
+      <div class="stat" id="stat-mult"><label>MULT</label><b>x1.0</b></div>
+    </div>
+
+    <div id="inventory" title="Your items — they trigger on events, just like Nubby">
+      <!-- item chips injected here -->
+    </div>
+  </header>
+
+  <!-- ===== GAME ARENA ===== -->
+  <main id="arena-wrap">
+    <canvas id="game" width="900" height="640"></canvas>
+
+    <!-- quota progress bar overlay -->
+    <div id="quotabar"><div id="quotafill"></div><span id="quotalabel"></span></div>
+
+    <!-- floating "CASH OUT" button when quota met -->
+    <button id="cashout" class="hidden">💰 CASH OUT 💰</button>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <section id="screen-title" class="screen">
+      <h1 class="megatitle">NUBBY'S<br>BRICK FACTORY</h1>
+      <p class="tagline">ARKANOID × NUBBY'S NUMBER FACTORY · the world's most EPIC hybrid</p>
+      <div class="title-memes" id="titleMemes"></div>
+      <button id="btn-start" class="bigbtn">▶ START THE FACTORY</button>
+      <p class="howto">Move with <b>MOUSE</b> · Launch with <b>CLICK / SPACE</b> · Smash bricks to hit the <b>QUOTA</b> before you run out of Nubbys.</p>
+      <p class="howto small">much wow · very brick · so number · 1337</p>
+    </section>
+
+    <!-- ===== SHOP SCREEN ===== -->
+    <section id="screen-shop" class="screen hidden">
+      <h2 class="shoptitle">🛒 NUBBY-MART 🛒</h2>
+      <p class="shopsub">spend your hard-earned NUBBINS · much shopping</p>
+      <div id="shop-items"></div>
+      <div class="shop-foot">
+        <button id="btn-reroll" class="midbtn">🎲 REROLL (<span id="rerollcost">3</span>)</button>
+        <button id="btn-nextround" class="bigbtn">NEXT ROUND ▶</button>
+      </div>
+    </section>
+
+    <!-- ===== PERK SCREEN ===== -->
+    <section id="screen-perk" class="screen hidden">
+      <h2 class="shoptitle">🧠 CHOOSE A PERK 🧠</h2>
+      <p class="shopsub">galaxy-brain power-ups · choose wisely · much fate</p>
+      <div id="perk-items"></div>
+    </section>
+
+    <!-- ===== GAME OVER SCREEN ===== -->
+    <section id="screen-over" class="screen hidden">
+      <h2 class="overtitle">GAME OVER</h2>
+      <p class="oversub" id="oversub">Nubby is disappointed.</p>
+      <div id="over-stats"></div>
+      <button id="btn-retry" class="bigbtn">🔁 RUN IT BACK</button>
+    </section>
+  </main>
+
+  <footer id="botbar">
+    <span id="ticker">PINGAS · o shit waddup · IT'S OVER 9000 · much wow · stonks · here come dat boi · such brick</span>
+  </footer>
+</div>
+
+<!-- toast / airhorn callouts -->
+<div id="toaster"></div>
+
+<script src="js/meme_local.js"></script>
+<script src="js/meme_sounds.js"></script>
+<script src="js/memes.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/content.js"></script>
+<script src="js/bosses.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
