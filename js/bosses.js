@@ -100,7 +100,7 @@
         for (const b of S.bombs) { ctx.fillStyle = '#ff3b3b'; ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, 7); ctx.fill(); ctx.fillStyle = '#ffd23f'; ctx.fillRect(b.x - 1, b.y - 12, 2, 5); }
         ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 4; ctx.shadowColor = '#39ff14'; ctx.shadowBlur = 10;
         for (const l of S.lasers) { ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x, l.y - 18); ctx.stroke(); } ctx.shadowBlur = 0;
-        ctx.fillStyle = '#00ffd5'; ctx.fillRect(S.paddle.x - S.paddle.w / 2, S.paddle.y - 6, S.paddle.w, 12);
+        ctx.fillStyle = (d.arena ? d.arena.pad[1] : '#00ffd5'); ctx.fillRect(S.paddle.x - S.paddle.w / 2, S.paddle.y - 6, S.paddle.w, 12);
         for (const b of S.balls) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 7); ctx.fill(); }
         ctx.fillStyle = '#fff'; hearts(ctx, S.lives, 12, H - 14);
       },
@@ -154,7 +154,7 @@
         hpBar(ctx, W / 2 - 150, 54, 300, S.hp, S.max, 'BOSS HP');
         ctx.fillStyle = '#39ff14'; for (const b of S.bul) ctx.fillRect(b.x - 2, b.y - 8, 4, 8);
         ctx.fillStyle = '#ff3b3b'; for (const e of S.eb) { ctx.beginPath(); ctx.arc(e.x, e.y, 5, 0, 7); ctx.fill(); }
-        const sh = S.ship; if (S.inv <= 0 || Math.floor(S.inv * 12) % 2) { ctx.fillStyle = '#00ffd5'; ctx.beginPath(); ctx.moveTo(sh.x, sh.y - 14); ctx.lineTo(sh.x - 14, sh.y + 12); ctx.lineTo(sh.x + 14, sh.y + 12); ctx.closePath(); ctx.fill(); }
+        const sh = S.ship; if (S.inv <= 0 || Math.floor(S.inv * 12) % 2) { ctx.fillStyle = (d.arena ? d.arena.pad[1] : '#00ffd5'); ctx.beginPath(); ctx.moveTo(sh.x, sh.y - 14); ctx.lineTo(sh.x - 14, sh.y + 12); ctx.lineTo(sh.x + 14, sh.y + 12); ctx.closePath(); ctx.fill(); }
         ctx.fillStyle = '#fff'; hearts(ctx, S.lives, 12, H - 14);
       },
     };

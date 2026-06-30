@@ -220,8 +220,8 @@
     IMG[id] = img;
   }
 
-  // roster of memes usable on bricks / flashes / decor (UI-only icons excluded)
-  const IDS = [...allIds].filter((id) => id !== 'coin' && id !== 'nubby');
+  // roster of memes usable on bricks / flashes / decor (UI icons + secret-theme memes excluded)
+  const IDS = [...allIds].filter((id) => id !== 'coin' && id !== 'nubby' && !/^(retro|creepy)_/.test(id));
 
   global.MEMES = {
     img: IMG,                       // id -> HTMLImageElement (real pic, SVG fallback)

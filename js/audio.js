@@ -57,7 +57,10 @@
   // ---------- chiptune meme music (looping) ----------
   const LEAD = [523, 0, 659, 784, 880, 0, 784, 659, 587, 0, 494, 587, 659, 0, 523, 0];
   const BASS = [131, 131, 0, 196, 220, 220, 0, 196, 175, 175, 0, 147, 196, 196, 0, 98];
-  const music = { on: false, timer: null, step: 0, next: 0 };
+  // unsettling creepypasta drone (minor / dissonant, very slow) — Lavender-Town-ish
+  const CREEPY_LEAD = [220, 0, 233, 0, 311, 0, 233, 0, 207, 0, 246, 0, 220, 0, 185, 0];
+  const CREEPY_BASS = [55, 0, 0, 0, 58, 0, 0, 0, 49, 0, 0, 0, 52, 0, 0, 0];
+  const music = { on: false, timer: null, step: 0, next: 0, mode: 'chip' };
   function mNote(freq, t, dur, type, vol) {
     if (!ctx || !freq) return;
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -67,8 +70,19 @@
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g); g.connect(musicGain); o.start(t); o.stop(t + dur + 0.02);
   }
+  function creepyTick() {
+    const bpm = 60, step = (60 / bpm) / 2;
+    while (music.next < ctx.currentTime + 0.35) {
+      const s = music.step % 16, t = music.next;
+      if (CREEPY_LEAD[s]) { mNote(CREEPY_LEAD[s], t, step * 1.7, 'sine', 0.07); mNote(CREEPY_LEAD[s] * 1.008, t, step * 1.7, 'triangle', 0.05); } // detuned wobble
+      if (CREEPY_BASS[s]) mNote(CREEPY_BASS[s], t, step * 3.2, 'sawtooth', 0.09);
+      if (s === 0 && Math.random() < 0.5) noise(0.5, 0.04);  // distant hiss
+      music.next += step; music.step++;
+    }
+  }
   function mTick() {
     if (!music.on || !ctx) return;
+    if (music.mode === 'creepy') return creepyTick();
     const bpm = 148, step = (60 / bpm) / 2; // 8th notes
     while (music.next < ctx.currentTime + 0.25) {
       const s = music.step % 16, t = music.next;
@@ -91,6 +105,7 @@
     setMuted(m) { muted = m; if (m) musicStop(); },
     toggleMusic() { musicMuted = !musicMuted; if (musicMuted) musicStop(); else musicStart(); return !musicMuted; },
     musicStart, musicStop,
+    setMusicMode(m) { music.mode = m; music.step = 0; if (music.on) { music.next = ctx ? ctx.currentTime + 0.1 : 0; } },
     play,                              // real meme sound by key, returns true if it existed
     bounce() { tone(220 + Math.random() * 80, 0.06, 'square', 0.18); },
     hit() { tone(420, 0.05, 'square', 0.2, 620); },
@@ -109,6 +124,22 @@
     over9000() { tone(110, 0.6, 'sawtooth', 0.35, 1760); noise(0.6, 0.2); },
     hurt() { tone(200, 0.18, 'sawtooth', 0.3, 90); noise(0.1, 0.15); },
     bossHit() { tone(160, 0.1, 'square', 0.28, 80); noise(0.06, 0.12); },
+    // unique themed "voice" per item (seed = hash of item id) — guarantees a distinct sound per meme
+    procVoice(seed, theme, cat) {
+      ensure(); if (!ctx || muted) return;
+      const base = 174 + (seed % 16) * 33;            // unique pitch per item
+      if (theme === 'creepy') {
+        tone(base * 0.5, 0.45, 'sawtooth', 0.16, base * 0.32);            // descending dread
+        tone(base * 0.5 * 1.03, 0.45, 'sine', 0.12, base * 0.33);          // detuned wobble
+        if (cat === 'crit' || cat === 'laser' || cat === 'ball') noise(0.35, 0.18);
+        if ((seed >> 3) % 2) tone(base * 0.25, 0.6, 'triangle', 0.1, base * 0.2);
+      } else {
+        const arps = [[0,4,7,12],[0,3,7,10],[0,5,7,12],[0,4,9,12]][seed % 4];   // varied arpeggio
+        const type = ['square','triangle','sawtooth'][(seed >> 2) % 3];
+        arps.forEach((iv, i) => tone(base * Math.pow(2, iv / 12), 0.09, type, 0.2, null, i * 0.06));
+        if (cat === 'coin') tone(base * 3, 0.08, 'square', 0.18, null, 0.26);
+      }
+    },
   };
 
   global.SFX = SFX;

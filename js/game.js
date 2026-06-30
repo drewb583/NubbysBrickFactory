@@ -18,6 +18,18 @@
   const BALL_R = 9;
   const COLS = 11, GAP = 6, TOP = 64, SIDE = 40, BRICK_H = 22;
   const ROW_COLORS = ['#ff3ea5','#ff8a3e','#ffd23f','#39ff14','#00ffd5','#3ea5ff','#b06bff','#ff5fb0'];
+  // per-theme play-area palettes (background, stars, paddle, brick rows, specials)
+  const ARENA = {
+    default: { bg0:'#16002e', bg1:'#06001a', s1:'#ff3ea5', s2:'#00ffd5',
+      pad:['#ff3ea5','#ffd23f','#00ffd5'], rows:ROW_COLORS, gold:'#ffd23f', bomb:'#ff3b3b', meme:'#b06bff', glow:true, round:5 },
+    retro: { bg0:'#000000', bg1:'#000000', s1:'#fcfcfc', s2:'#3cbcfc',
+      pad:['#bcbcbc','#fcfcfc','#7c7c7c'], rows:['#f83800','#fc9838','#ffd23f','#00a800','#3cbcfc','#7c08fc','#e40058','#fcfcfc'],
+      gold:'#ffd23f', bomb:'#f83800', meme:'#7c08fc', glow:false, round:0 },
+    creepy: { bg0:'#0a0000', bg1:'#000000', s1:'#5a0000', s2:'#9c0000',
+      pad:['#3a0000','#9c0000','#5a0000'], rows:['#5a0000','#7a0000','#9c0000','#3a0000','#6a0010','#400000','#8a0000','#2a0000'],
+      gold:'#7a0000', bomb:'#c40000', meme:'#400000', glow:true, round:3 },
+  };
+  const arena = () => ARENA[(G && G.theme) || 'default'];
 
   // catchphrase shouted when a meme brick is smashed (the obnoxious flash)
   const MEME_PHRASES = {
@@ -56,7 +68,132 @@
     sparta:'airhornmlg', doomguy:'over9000', leeroy:'fbiopenup', shia:'airhornmlg', ugandanknuckles:'bruh',
     immaheadout:'bruh', skibidi:'vineboom', grimace:'vineboom', johnwick:'vineboom', therock:'sheesh',
     ohio:'vineboom', pressf:'oof',
+    // secret-theme memes without their own clip
+    retro_bimmy:'retro_contra', creepy_lavender:'creepy_static', creepy_suicidemouse:'creepy_static',
+    creepy_momo:'creepy_scream', creepy_jack:'creepy_laugh', creepy_tails:'creepy_laugh',
+    creepy_candlecove:'creepy_static', creepy_masky:'creepy_static', creepy_pokemonblack:'creepy_laugh',
   };
+
+  // ===================================================================
+  //  SECRET THEMES — Konami code => So Retro,  6 6 6 => Creepypasta
+  // ===================================================================
+  const THEME = {
+    default: { name: 'DEFAULT', body: '' },
+    retro: {
+      name: 'SO RETRO', body: 'theme-retro', music: 'chip',
+      pool: ['retro_dangerous','retro_secret','retro_error','retro_bimmy','retro_avgn','retro_allyourbase',
+             'retro_thankyoumario','retro_konami','retro_megaman','retro_contra','retro_winners','retro_blast',
+             'retro_sonicsays','retro_pacman','retro_mario','retro_dk','retro_bowser','retro_sonic','retro_tetris',
+             'retro_megamanx','retro_finishhim','retro_battletoads','retro_duckhunt','retro_gameboy','retro_streetfighter','retro_samus'],
+    },
+    creepy: {
+      name: 'CREEPYPASTA', body: 'theme-creepy', music: 'creepy', jumpscare: true,
+      pool: ['creepy_slenderman','creepy_jeff','creepy_ben','creepy_smiledog','creepy_sonicexe','creepy_herobrine',
+             'creepy_lavender','creepy_suicidemouse','creepy_squidward','creepy_momo','creepy_rake','creepy_sirenhead',
+             'creepy_jack','creepy_tails','creepy_backrooms','creepy_candlecove','creepy_masky','creepy_pokemonblack',
+             'creepy_scp096','creepy_scp173','creepy_zalgo'],
+    },
+  };
+  const THEME_META = {
+    retro_dangerous:{name:"It's Dangerous!",phrase:"IT'S DANGEROUS TO GO ALONE!"},
+    retro_secret:{name:"A Secret To Everybody",phrase:"IT'S A SECRET TO EVERYBODY"},
+    retro_error:{name:"I Am Error",phrase:"I AM ERROR"},
+    retro_bimmy:{name:"Bimmy & Jimmy",phrase:"BIMMY AND JIMMY"},
+    retro_avgn:{name:"AVGN",phrase:"WHAT WERE THEY THINKING?!"},
+    retro_allyourbase:{name:"All Your Base",phrase:"ALL YOUR BASE ARE BELONG TO US"},
+    retro_thankyoumario:{name:"Another Castle",phrase:"OUR PRINCESS IS IN ANOTHER CASTLE!"},
+    retro_konami:{name:"Konami Code",phrase:"↑↑↓↓←→←→ B A"},
+    retro_megaman:{name:"Mega Man",phrase:"DR. WILY!"},
+    retro_contra:{name:"Contra",phrase:"30 LIVES!"},
+    retro_winners:{name:"Winners",phrase:"WINNERS DON'T USE DRUGS"},
+    retro_blast:{name:"Blast Processing",phrase:"SEEEGAAA!"},
+    retro_sonicsays:{name:"Sonic Says",phrase:"SONIC SAYS!"},
+    retro_pacman:{name:"Pac-Man",phrase:"WAKA WAKA WAKA"},
+    creepy_slenderman:{name:"Slender Man",phrase:"...always watches..."},
+    creepy_jeff:{name:"Jeff The Killer",phrase:"GO TO SLEEP"},
+    creepy_ben:{name:"BEN Drowned",phrase:"you've met with a terrible fate"},
+    creepy_smiledog:{name:"Smile Dog",phrase:"spread the word"},
+    creepy_sonicexe:{name:"Sonic.exe",phrase:"I AM GOD"},
+    creepy_herobrine:{name:"Herobrine",phrase:"he is watching"},
+    creepy_lavender:{name:"Lavender Town",phrase:"♪ ♫ ...turn back..."},
+    creepy_suicidemouse:{name:"Suicide Mouse",phrase:"the screaming..."},
+    creepy_squidward:{name:"Red Mist",phrase:"DO IT"},
+    creepy_momo:{name:"Momo",phrase:"...wanna play?"},
+    creepy_rake:{name:"The Rake",phrase:"it crawls closer"},
+    creepy_sirenhead:{name:"Siren Head",phrase:"*distorted wail*"},
+    creepy_jack:{name:"Eyeless Jack",phrase:"give me your kidneys"},
+    creepy_tails:{name:"Tails Doll",phrase:"can you feel the sunshine?"},
+    retro_mario:{name:"Mario",phrase:"IT'S-A ME!"}, retro_dk:{name:"Donkey Kong",phrase:"DK! DONKEY KONG!"},
+    retro_bowser:{name:"Bowser",phrase:"GWA HA HA!"}, retro_sonic:{name:"Sonic",phrase:"GOTTA GO FAST"},
+    retro_tetris:{name:"Tetris",phrase:"TETRIS!"}, retro_megamanx:{name:"Mega Man X",phrase:"X-BUSTER!"},
+    retro_finishhim:{name:"Finish Him",phrase:"FINISH HIM!"}, retro_battletoads:{name:"Battletoads",phrase:"RARE!"},
+    retro_duckhunt:{name:"Duck Hunt",phrase:"*dog laughs at you*"}, retro_gameboy:{name:"Game Boy",phrase:"di-ding!"},
+    retro_streetfighter:{name:"Hadouken",phrase:"HADOUKEN!"}, retro_samus:{name:"Samus",phrase:"ITEM GET!"},
+    creepy_backrooms:{name:"The Backrooms",phrase:"you noclipped out"}, creepy_candlecove:{name:"Candle Cove",phrase:"YOU HAVE TO GO INSIDE"},
+    creepy_masky:{name:"Masky",phrase:"operator..."}, creepy_pokemonblack:{name:"Pokémon Black",phrase:"GHOST used CURSE"},
+    creepy_scp096:{name:"SCP-096",phrase:"don't look at its face"}, creepy_scp173:{name:"SCP-173",phrase:"do not blink"},
+    creepy_zalgo:{name:"Zalgo",phrase:"H̸E̸ ̸C̸O̸M̸E̸S̸"},
+  };
+  // deterministic base-meme -> themed-meme remap
+  function themedId(baseId) {
+    if (!G || G.theme === 'default' || !baseId || /^(retro|creepy)_/.test(baseId)) return baseId;
+    const pool = THEME[G.theme].pool;
+    let h = 0; for (let i = 0; i < baseId.length; i++) h = (h * 31 + baseId.charCodeAt(i)) >>> 0;
+    return pool[h % pool.length];
+  }
+  function themedName(baseId) { const t = themedId(baseId); return (THEME_META[t] && THEME_META[t].name) || baseId; }
+  function phraseFor(id) { return (THEME_META[id] && THEME_META[id].phrase) || MEME_PHRASES[id] || 'MEME!'; }
+  function playMeme(id) { const t = themedId(id); return SFX.play(t) || SFX.play(MEME_SND_ALIAS[t]); }
+  // auto-generate a theme-neutral effect description from an item's stats/hooks
+  function effectText(it) {
+    const p = [];
+    if (it.mult) p.push('+' + it.mult.toFixed(2) + 'x multiplier');
+    if (it.extraBalls) p.push('+' + it.extraBalls + ' ball' + (it.extraBalls > 1 ? 's' : '') + '/launch');
+    if (it.startBalls) p.push((it.startBalls > 0 ? '+' : '') + it.startBalls + ' max ball' + (Math.abs(it.startBalls) > 1 ? 's' : ''));
+    if (it.paddleScale) p.push('+' + Math.round(it.paddleScale * 100) + '% paddle');
+    if (it.ballScale) p.push('+' + Math.round(it.ballScale * 100) + '% ball size');
+    if (it.speedScale) p.push('+' + Math.round(it.speedScale * 100) + '% ball speed');
+    if (it.critChance) p.push('+' + Math.round(it.critChance * 100) + '% crit (x5)');
+    if (it.coinMult) p.push('+' + Math.round(it.coinMult * 100) + '% coins');
+    if (it.coinBrickChance) p.push(Math.round(it.coinBrickChance * 100) + '% bricks drop a coin');
+    if (it.pierceChance) p.push(Math.round(it.pierceChance * 100) + '% pierce');
+    if (it.memeChance) p.push('more meme bricks');
+    if (it.goldChance) p.push('more gold bricks');
+    if (it.bombChance) p.push('more bomb bricks');
+    if (it.quotaCut) p.push('-' + Math.round(it.quotaCut * 100) + '% quota');
+    if (it.revive) p.push('+' + it.revive + ' revive');
+    if (it.magnet) p.push('coins magnet to paddle');
+    if (it.laser) p.push('paddle lasers');
+    if (it.comboKeep) p.push('combo never resets');
+    else if (it.comboGain) p.push('combo multiplier scaling');
+    if (it.freeReroll) p.push('free shop rerolls');
+    if (it.shopDiscount) p.push('-' + it.shopDiscount + ' shop cost');
+    if (it.onScore) p.push('NUKE the board past 9000');
+    if (it.onBallLost) p.push('chance to refund a drained ball');
+    if (it.onCashOut) p.push('bonus NUBBINS on cash out');
+    if (it.onQuota) p.push('bonus NUBBINS on quota');
+    if (it.onBrickBreak) p.push('gamble brick values');
+    if (it.onRoundStart) p.push('one SUS brick each round');
+    return p.join(' · ') || 'mysterious power';
+  }
+  // the UNIQUE real themed meme assigned to an item's art (from generated THEME_MAP), or null
+  function itemThemedId(art) {
+    return (window.THEME_MAP && G.theme !== 'default' && window.THEME_MAP[G.theme] && window.THEME_MAP[G.theme][art]) || null;
+  }
+  // resolve an item's themed look: prefer a REAL themed meme (image+sound+name), else procedural skin
+  function itemSkin(def) {
+    const tid = itemThemedId(def.art);
+    if (tid && window.MEME_LOCAL && window.MEME_LOCAL[tid]) {
+      const meta = (window.THEME_META && window.THEME_META[tid]) || THEME_META[tid] || {};
+      return { img: MEMES.uri(tid), name: meta.name || def.name, flavor: meta.phrase || def.flavor, soundId: tid, real: true };
+    }
+    return { img: SKIN.itemURI(def, G.theme), name: SKIN.name(def, G.theme), flavor: SKIN.flavor(def, G.theme), soundId: null, real: false };
+  }
+  function playItemSkin(def) {  // returns true if a sound played
+    const sk = itemSkin(def);
+    if (sk.soundId && (SFX.play(sk.soundId) || SFX.play(MEME_SND_ALIAS[sk.soundId]))) return true;
+    SFX.procVoice(SKIN.seed(def), G.theme, SKIN.category(def)); return true;
+  }
 
   // ----------------------------------------------------------------
   //  DOM
@@ -76,11 +213,12 @@
   // ----------------------------------------------------------------
   let G = null;
   let boss = null;
+  let activeTheme = 'default';   // persists across runs; set by the secret title-screen codes
   const isBossRound = (r) => r % 5 === 0;
   const bossName = (t) => ({ meme: 'GIANT MEME', shmup: 'BULLET HELL', tetris: 'TETRIS', puyo: 'PUYO' }[t] || 'BOSS');
   function freshRun() {
     G = {
-      scene: 'title', round: 1, quota: 0, score: 0, coins: 0,
+      scene: 'title', round: 1, quota: 0, score: 0, coins: 0, theme: activeTheme,
       ballsLeft: BASE_BALLS, wave: 1, combo: 0,
       items: [], perks: [],
       balls: [], bricks: [], pickups: [], lasers: [], particles: [], popups: [],
@@ -253,7 +391,8 @@
     hook('onBallLost', e);
     if (e.save) { reloadBall(); return; }
     G.ballsLeft--;
-    SFX.play('bruh');
+    // themed death sound when a ball drains
+    if (!SFX.play(G.theme === 'retro' ? 'retro_death' : G.theme === 'creepy' ? 'creepy_death' : 'bruh')) SFX.play('bruh');
     updateHUD();
     if (G.ballsLeft > 0) { reloadBall(); return; }
     // out of balls
@@ -312,12 +451,14 @@
 
   // ===== OBNOXIOUS meme-brick flash: fullscreen strobe meme + airhorn =====
   function memeFlash(id) {
-    G.flash = { id, t: 0, life: 1 };
+    const tid = themedId(id);                 // reskin in secret modes
+    G.flash = { id: tid, t: 0, life: 1 };
     G.shake = Math.max(G.shake, 22);
-    // ONE sound at a time: just the meme's own clip (airhorn only if it has none)
-    if (!SFX.play(id) && !SFX.play(MEME_SND_ALIAS[id])) SFX.airhorn();
-    toast(MEME_PHRASES[id] || 'MEME!');
-    for (let i = 0; i < 5; i++) burst(Math.random() * W, Math.random() * H * 0.6, ['#ff3ea5','#00ffd5','#ffd23f','#39ff14'][i % 4], 4);
+    // ONE sound at a time: the meme's own clip (themed), airhorn only if it has none
+    if (!playMeme(id)) SFX.airhorn();
+    toast(phraseFor(tid));
+    const cols = G.theme === 'creepy' ? ['#7a0000','#3a0000','#aa0000','#220022'] : ['#ff3ea5','#00ffd5','#ffd23f','#39ff14'];
+    for (let i = 0; i < 5; i++) burst(Math.random() * W, Math.random() * H * 0.6, cols[i % 4], 4);
   }
 
   function checkQuota() {
@@ -357,8 +498,9 @@
   // ===== BOSS ROUNDS =====
   function startBoss(r) {
     const type = BOSSES.typeForRound(r);
-    const memeId = MEMES.ids[(Math.random() * MEMES.ids.length) | 0];
-    boss = BOSSES.create(type, { ctx, W, H, memeId, toast, agg: G.agg, round: r });
+    const rawMeme = MEMES.ids[(Math.random() * MEMES.ids.length) | 0];
+    const memeId = themedId(rawMeme);   // the giant boss meme is reskinned in secret modes
+    boss = BOSSES.create(type, { ctx, W, H, memeId, toast, agg: G.agg, round: r, theme: G.theme, arena: arena() });
     G.boss = { type, memeId };
     G.scene = 'boss';
     hideAllScreens();
@@ -390,9 +532,12 @@
     G.scene = 'over';
     boss = null;
     SFX.lose();
-    if (!SFX.play('wasted')) SFX.play('sadviolin');
-    const phrases = ['Nubby is disappointed.', 'task failed successfully', 'F in the chat',
-      'oof. big oof.', 'the quota remains unfed', 'much fail · very sad · wow'];
+    if (G.theme === 'creepy') { jumpscare(); }
+    else if (!SFX.play('wasted')) SFX.play('sadviolin');
+    const phrases = G.theme === 'creepy'
+      ? ['you should not have come here', 'it was always watching', 'there is no escape', 'wake up', 'he is behind you', 'the quota feeds on you now']
+      : ['Nubby is disappointed.', 'task failed successfully', 'F in the chat',
+         'oof. big oof.', 'the quota remains unfed', 'much fail · very sad · wow'];
     $('oversub').textContent = phrases[(Math.random() * phrases.length) | 0];
     $('over-stats').innerHTML =
       'You reached <b>Round ' + G.round + '</b><br>' +
@@ -441,12 +586,18 @@
     card.className = 'card' + (isPerk ? ' perkcard' : '');
     const cost = isPerk ? 0 : price(def);
     const owned = !isPerk && false /*no cap: all items stack*/;
+    const themed = G.theme !== 'default';
+    const sk = themed ? itemSkin(def) : null;
+    const shownName = themed ? sk.name : def.name;
+    const shownArt = themed ? sk.img : MEMES.uri(def.art);
+    const shownDesc = themed ? effectText(def) : def.desc;
+    const shownFlav = themed ? sk.flavor : def.flavor;
     card.innerHTML =
-      `<img class="art" src="${MEMES.uri(def.art)}" alt="${def.name}">` +
-      `<div class="nm">${def.name}</div>` +
+      `<img class="art" src="${shownArt}" alt="${shownName}">` +
+      `<div class="nm">${shownName}</div>` +
       (isPerk ? '' : `<div class="rar ${def.rarity}">${def.rarity}</div>`) +
-      `<div class="ds">${def.desc}</div>` +
-      `<div class="fl">“${def.flavor}”</div>` +
+      `<div class="ds">${shownDesc}</div>` +
+      `<div class="fl">“${shownFlav}”</div>` +
       (isPerk
         ? `<button class="buy">✚ TAKE PERK</button>`
         : `<button class="buy">${owned ? 'INV FULL' : 'BUY · ' + cost + ' 🪙'}</button>`);
@@ -465,8 +616,9 @@
     G.coins -= cost;
     G.items.push(Object.assign({}, def));   // clone so duplicates stack
     recompute(); updateHUD(); renderInventory();
-    if (!SFX.play(def.art) && !SFX.play(MEME_SND_ALIAS[def.art])) SFX.buy();  // the meme you buy shouts its sound (one at a time)
-    toast('GOT ' + def.name.toUpperCase() + '!');
+    if (G.theme !== 'default') SFX.procVoice(SKIN.seed(def), G.theme, SKIN.category(def));  // unique themed voice
+    else if (!playMeme(def.art)) SFX.buy();
+    toast('GOT ' + (G.theme === 'default' ? def.name : SKIN.name(def, G.theme)).toUpperCase() + '!');
     const btn = card.querySelector('.buy');
     btn.textContent = '✔ OWNED'; btn.disabled = true; card.classList.add('owned');
     // refresh other buttons' affordability
@@ -493,7 +645,8 @@
     G.perks.push(Object.assign({}, def));
     recompute(); updateHUD(); renderInventory();
     SFX.levelup();
-    if (!SFX.play(def.art) && !SFX.play(MEME_SND_ALIAS[def.art])) {}   // perk's meme also shouts
+    if (G.theme !== 'default') SFX.procVoice(SKIN.seed(def), G.theme, SKIN.category(def));
+    else playMeme(def.art);
     toast('PERK: ' + def.name + '!');
     G.shopOffer = null; rollShop();
     showShop();
@@ -531,9 +684,15 @@
     const d = document.createElement('div');
     d.className = 'invchip';
     if (isPerk) d.style.borderColor = '#00ffd5', d.style.boxShadow = '0 0 6px #00ffd5';
-    d.innerHTML = `<img src="${MEMES.uri(def.art)}">` +
+    const themed = G.theme !== 'default';
+    const sk = themed ? itemSkin(def) : null;
+    const nm = themed ? sk.name : def.name;
+    const art = themed ? sk.img : MEMES.uri(def.art);
+    const ds = themed ? effectText(def) : def.desc;
+    const fl = themed ? sk.flavor : def.flavor;
+    d.innerHTML = `<img src="${art}">` +
       (n > 1 ? `<span class="badge">${n}</span>` : '') +
-      `<div class="tip"><b>${def.name}</b>${isPerk ? ' <i>(perk)</i>' : ''}<br>${def.desc}<br><i>“${def.flavor}”</i></div>`;
+      `<div class="tip"><b>${nm}</b>${isPerk ? ' <i>(perk)</i>' : ''}<br>${ds}<br><i>“${fl}”</i></div>`;
     return d;
   }
 
@@ -671,18 +830,29 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (G.shake > 0) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
 
-    // background
+    // background (themed)
+    const A = arena();
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#16002e'); g.addColorStop(1, '#06001a');
+    g.addColorStop(0, A.bg0); g.addColorStop(1, A.bg1);
     ctx.fillStyle = g; ctx.fillRect(-30, -30, W + 60, H + 60);
-    // moving star grid
-    ctx.globalAlpha = 0.25;
+    if (G.theme === 'retro') {  // CRT scanlines + faint grid
+      ctx.globalAlpha = 0.10; ctx.fillStyle = '#3cbcfc';
+      for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1);
+      ctx.globalAlpha = 1;
+    }
+    // moving star grid (themed)
+    ctx.globalAlpha = G.theme === 'creepy' ? 0.4 : 0.25;
     for (let i = 0; i < 40; i++) {
       const x = (i * 137.5 + t * 18) % W, y = (i * 53.3 + t * 30) % H;
-      ctx.fillStyle = i % 3 ? '#ff3ea5' : '#00ffd5';
+      ctx.fillStyle = i % 3 ? A.s1 : A.s2;
       ctx.fillRect(x, y, 2, 2);
     }
     ctx.globalAlpha = 1;
+    if (G.theme === 'creepy') {  // vignette
+      const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.75);
+      v.addColorStop(0, '#0000'); v.addColorStop(1, '#000000cc');
+      ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+    }
 
     if (G.scene === 'boss' && boss) { boss.render(); return; }
 
@@ -753,9 +923,12 @@
     const f = G.flash, img = MEMES.get(f.id);
     const a = Math.min(1, f.life * 1.5);
     const ready = img && img.complete && img.naturalWidth;
-    // strobing rainbow backdrop
+    // strobing backdrop (themed palette)
     ctx.globalAlpha = a * (0.16 + 0.22 * Math.abs(Math.sin(f.t * 28)));
-    ctx.fillStyle = ['#ff3ea5','#00ffd5','#ffd23f','#39ff14','#b06bff'][Math.floor(f.t * 30) % 5];
+    const flashPal = G.theme === 'creepy' ? ['#3a0000','#000','#7a0000','#1a0010','#220000']
+      : G.theme === 'retro' ? ['#000','#fcfcfc','#0000ff','#00a800','#f83800']
+      : ['#ff3ea5','#00ffd5','#ffd23f','#39ff14','#b06bff'];
+    ctx.fillStyle = flashPal[Math.floor(f.t * 30) % 5];
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = a;
     // 6 orbiting spinning copies
@@ -768,7 +941,7 @@
     const sc = 1 + 0.16 * Math.sin(f.t * 24), big = Math.min(W, H) * 0.4 * sc;
     if (ready) { ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(Math.sin(f.t * 11) * 0.09); try { ctx.drawImage(img, -big / 2, -big / 2, big, big); } catch (e) {} ctx.restore(); }
     // wobbling catchphrase
-    const ph = MEME_PHRASES[f.id] || 'MEME!';
+    const ph = phraseFor(f.id);
     ctx.textAlign = 'center';
     const fs = 38 + 8 * Math.sin(f.t * 22);
     ctx.font = 'bold ' + fs + 'px Comic Sans MS';
@@ -779,32 +952,44 @@
   }
 
   function drawBrick(b) {
+    const A = arena();
+    const col = b.type === 'gold' ? A.gold : b.type === 'bomb' ? A.bomb : b.type === 'meme' ? A.meme : A.rows[b.row % A.rows.length];
     ctx.save();
-    ctx.shadowColor = b.color; ctx.shadowBlur = 8;
-    ctx.fillStyle = b.color;
-    roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, 5); ctx.fill();
+    if (A.glow) { ctx.shadowColor = col; ctx.shadowBlur = G.theme === 'creepy' ? 6 : 8; }
+    ctx.fillStyle = col;
+    roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, A.round); ctx.fill();
     ctx.shadowBlur = 0;
-    if (b.meme && MEMES.get(b.meme).complete) {
-      try { ctx.drawImage(MEMES.get(b.meme), b.x - b.h / 2, b.y - b.h / 2, b.h, b.h); } catch (e) {}
+    if (G.theme === 'retro') { ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h); ctx.fillStyle = '#fff4'; ctx.fillRect(b.x - b.w / 2 + 2, b.y - b.h / 2 + 2, b.w - 4, 3); }
+    else if (G.theme === 'creepy') { ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h); }
+    if (b.meme) {
+      const mimg = MEMES.get(themedId(b.meme));
+      if (mimg && mimg.complete) { try { ctx.drawImage(mimg, b.x - b.h / 2, b.y - b.h / 2, b.h, b.h); } catch (e) {} }
     }
-    ctx.fillStyle = '#0a0018'; ctx.font = 'bold 12px Comic Sans MS'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = G.theme === 'creepy' ? '#fff' : '#0a0018';
+    ctx.font = (G.theme === 'default' ? 'bold 12px Comic Sans MS' : 'bold 11px monospace'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(fmt(b.value), b.x + (b.meme ? b.h / 2 - 4 : 0), b.y);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
   }
 
   function drawPaddle() {
-    const p = G.paddle;
+    const p = G.paddle, A = arena();
     ctx.save();
-    ctx.shadowColor = '#ff3ea5'; ctx.shadowBlur = 14;
+    if (A.glow) { ctx.shadowColor = A.pad[0]; ctx.shadowBlur = 14; }
     const g = ctx.createLinearGradient(p.x - p.w / 2, 0, p.x + p.w / 2, 0);
-    g.addColorStop(0, '#ff3ea5'); g.addColorStop(0.5, '#ffd23f'); g.addColorStop(1, '#00ffd5');
+    g.addColorStop(0, A.pad[0]); g.addColorStop(0.5, A.pad[1]); g.addColorStop(1, A.pad[2]);
     ctx.fillStyle = g;
-    roundRect(p.x - p.w / 2, p.y - p.h / 2, p.w, p.h, 8); ctx.fill();
+    roundRect(p.x - p.w / 2, p.y - p.h / 2, p.w, p.h, A.round + 3); ctx.fill();
     ctx.shadowBlur = 0;
-    // doge face on paddle
-    const dg = MEMES.get('doge');
-    if (dg.complete) { try { ctx.drawImage(dg, p.x - 12, p.y - 12, 24, 24); } catch (e) {} }
+    if (G.theme === 'retro') {
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(p.x - p.w / 2, p.y - p.h / 2, p.w, p.h);
+      ctx.fillStyle = '#000'; ctx.fillRect(p.x - 10, p.y - 2, 4, 4); ctx.fillRect(p.x + 6, p.y - 2, 4, 4);  // pixel eyes
+    } else if (G.theme === 'creepy') {
+      ctx.fillStyle = '#ff0000'; ctx.fillRect(p.x - 12, p.y - 2, 5, 3); ctx.fillRect(p.x + 7, p.y - 2, 5, 3);  // glowing red eyes
+    } else {
+      const dg = MEMES.get('doge');
+      if (dg.complete) { try { ctx.drawImage(dg, p.x - 12, p.y - 12, 24, 24); } catch (e) {} }
+    }
     ctx.restore();
   }
 
@@ -850,7 +1035,45 @@
   }
   cv.addEventListener('mousedown', primary);
   cv.addEventListener('touchstart', (e) => { if (e.touches[0]) G.mouseX = canvasX(e.touches[0].clientX); primary(); e.preventDefault(); }, { passive: false });
+  // ----- SECRET THEMES: Konami => retro, 6 6 6 => creepypasta (title only) -----
+  const KONAMI = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a','enter'];
+  let konamiBuf = [], sixBuf = 0;
+  function checkSecretCodes(e) {
+    if (G.scene !== 'title') return;
+    const k = e.key.toLowerCase();
+    konamiBuf.push(k); if (konamiBuf.length > KONAMI.length) konamiBuf.shift();
+    if (konamiBuf.length === KONAMI.length && KONAMI.every((x, i) => x === konamiBuf[i])) { konamiBuf = []; applyTheme(activeTheme === 'retro' ? 'default' : 'retro'); }
+    if (k === '6') { sixBuf++; if (sixBuf >= 3) { sixBuf = 0; applyTheme(activeTheme === 'creepy' ? 'default' : 'creepy'); } } else sixBuf = 0;
+  }
+  function applyTheme(name) {
+    activeTheme = name; if (G) G.theme = name;
+    document.body.className = THEME[name].body || '';
+    SFX.init();
+    if (name === 'creepy') { SFX.setMusicMode('creepy'); SFX.musicStart(); SFX.play('creepy_laugh'); }
+    else if (name === 'retro') { SFX.setMusicMode('chip'); SFX.musicStart(); SFX.play('retro_secret'); }
+    else { SFX.setMusicMode('chip'); SFX.play('over9000'); }
+    decorate();
+    const tl = document.querySelector('.tagline');
+    if (tl) tl.textContent = name === 'retro' ? '★ SO RETRO MODE — now you\'re playing with POWER ★'
+      : name === 'creepy' ? 'CREEPYPASTA MODE — turn back while you still can'
+      : 'ARKANOID × NUBBY\'S NUMBER FACTORY · the world\'s most EPIC hybrid';
+    const mt = document.querySelector('.megatitle');
+    if (mt) mt.innerHTML = name === 'creepy' ? 'NUBBY.EXE' : "NUBBY'S<br>BRICK FACTORY";
+    toast(name === 'retro' ? '🕹️ SO RETRO MODE!' : name === 'creepy' ? '👁️ CREEPYPASTA MODE…' : '✨ back to normal');
+  }
+  function jumpscare() {
+    const pool = THEME.creepy.pool, id = pool[(Math.random() * pool.length) | 0];
+    let el = document.getElementById('jumpscare');
+    if (!el) { el = document.createElement('div'); el.id = 'jumpscare'; document.body.appendChild(el); }
+    el.style.backgroundImage = "url('" + MEMES.uri(id) + "')";
+    el.classList.add('active');
+    if (!SFX.play('creepy_jumpscare')) SFX.play('creepy_scream');
+    G.shake = 30;
+    setTimeout(() => el.classList.remove('active'), 1100);
+  }
+
   window.addEventListener('keydown', (e) => {
+    checkSecretCodes(e);
     if (G.scene === 'boss' && boss) {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) || e.code === 'Space') e.preventDefault();
       boss.key(e);
@@ -887,20 +1110,23 @@
   //  DECORATION: floating meme rain + title memes
   // ----------------------------------------------------------------
   function decorate() {
+    const themed = G && G.theme !== 'default';
+    const pool = themed ? THEME[G.theme].pool : MEMES.ids;
     const rain = $('memeRain');
+    rain.innerHTML = '';
     for (let i = 0; i < 14; i++) {
       const img = document.createElement('img');
       img.className = 'float-meme';
-      img.src = MEMES.uri(MEMES.ids[i % MEMES.ids.length]);
+      img.src = MEMES.uri(pool[i % pool.length]);
       img.style.left = (Math.random() * 100) + 'vw';
       img.style.animationDuration = (12 + Math.random() * 16) + 's';
       img.style.animationDelay = (-Math.random() * 20) + 's';
       rain.appendChild(img);
     }
     const tm = $('titleMemes');
-    ['doge', 'datboi', 'pingas', 'over9000', 'stonks', 'trollface', 'nyan', 'shrek'].forEach(id => {
-      const img = document.createElement('img'); img.src = MEMES.uri(id); img.alt = id; tm.appendChild(img);
-    });
+    tm.innerHTML = '';
+    const titleIds = themed ? pool.slice(0, 8) : ['doge', 'datboi', 'pingas', 'over9000', 'stonks', 'trollface', 'nyan', 'shrek'];
+    titleIds.forEach(id => { const img = document.createElement('img'); img.src = MEMES.uri(id); img.alt = id; tm.appendChild(img); });
   }
 
   // ----------------------------------------------------------------
@@ -908,6 +1134,11 @@
   // ----------------------------------------------------------------
   window.__DEBUG = {
     state: () => G,
+    setTheme: (n) => applyTheme(n),
+    themedId: (id) => themedId(id),
+    effectText: (it) => effectText(it),
+    jumpscareActive: () => !!document.querySelector('#jumpscare.active'),
+    triggerGameOver: () => gameOver(),
     startRound: (r) => startRound(r || 1),
     gain: (n) => gainScore(n, W / 2, H / 2, true),
     cashOut: () => cashOut(),
